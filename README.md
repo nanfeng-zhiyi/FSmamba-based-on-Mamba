@@ -6,16 +6,14 @@
 
 ## 项目简介
 
-![图片](.\images\FSMamba.png)
+![图片](./images/FSMamba.png)
 
 远程心率估计算法能够直接从视频中提取生理信号，但在真实应用场景中面临三大挑战：
-
 1. **缺乏对低频生理节律的频率选择性建模**，信号易被噪声覆盖。
 2. **单一模态输入在复杂光照、遮挡或设备差异下稳定性下降**。
 3. **传统时序建模在长序列条件下计算复杂度高、泛化能力有限**。
 
 本项目提出了 **FSMamba**（Frequency-Selective Mamba），将以下思想集成到一个端到端框架中：
-
 - **多模态融合**（RGB + NIR），利用双向跨模态注意力增强两者互补性。
 - **频率选择性编码**，通过可学习分段滤波聚焦心率频段（0.7–2.5Hz）。
 - **高效时序建模**，基于 Mamba 状态空间结构捕获长距离依赖。
@@ -25,51 +23,46 @@
 
 * 基于1-fold数据集划分模型下VIPL-HR数据集上的表现
 
-![](.\images\test.png)
+![](./images/test.png)
 
-![](.\images\erro_dist.png)
+![](./images/erro_dist.png)
 
 * 模型消融表现
 
-![](.\images\ablation.png)
+![](./images/ablation.png)
 
 ---
 
 ## 主要特性
 
 - 🔷 **双流特征提取**  
-
   - 采用 STMap（时空差分）加轻量卷积编码器，从 RGB 和 NIR 视频分别抽取时空特征。
   - 双模态分支并行处理，保留各自特征分布。
 
 - 🔷 **双向跨模态注意力**  
-
-  ![](.\images\Cross Attention.png)
+  
+  ![](./images/Cross Attention.png)
 
   - 设计 RGB→NIR 与 NIR→RGB 两路交叉注意力，使两种模态信息动态互补。
   - 融合后用 MLP 投影得到最终联合表示，用于后续时序建模。
-
+  
 - 🔷 **FSMamba 编码器**  
-
   - 继承 Mamba 状态空间模型（SSM）的高效序列处理，具备线性时间复杂度。
   - 引入 **频率选择路径（FSFilter）**：可学习的滤波参数显式关注心率频段（0.7–2.5Hz），提升低频信号检测能力。
   - 输出包含全局时序特征与心率频段特征两部分，二者通过残差连接累积。
 
 - 🔷 **心率解码模块**  
-
   - 分支一：对 FSMamba 编码器输出的全局时序特征进行 MLP 变换，提取原始回归信息。  
   - 分支二：对 FSMamba 编码器输出的频率选择特征进行 SincConv1d 滤波与 MLP 变换，强化频谱信息。  
   - 将两部分特征融合，采用 **区间分类 + 组内回归** 的混合结构预测最终心率，并运用分布对齐损失提高一致性。
 
 - 🔷 **多任务损失设计**  
-
   ```text
   L_total = λ_reg * L_reg + λ_cls * L_cls + λ_dist * L_dist
-  ```
 
 * 性能比较
 
-![](.\images\compare.png)
+![](./images/compare.png)
 
 # 模型实现概述
 
@@ -253,6 +246,6 @@ python training/train_multitask.py --config /path/to/config.yaml
 
 ## 训练示例
 
-![](.\images\example1.png)
+![](./images/example1.png)
 
-![](.\images\example2.png)
+![](./images/example2.png)
