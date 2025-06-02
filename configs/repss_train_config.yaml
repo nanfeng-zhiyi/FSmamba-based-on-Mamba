@@ -1,0 +1,131 @@
+# RePSS训练配置
+data:
+  path: "data/processed_vipl"
+  sequence_length: 80 # 减少帧数量以加快测试
+  batch_size: 4 # 降低批次大小以避免CUDA内存不足
+  num_workers: 0 # 禁用多进程加载，避免序列化问题
+  use_nir: true # 是否使用NIR输入
+  use_vppg: false # 是否使用视频光象式心率
+  # 数据筛选参数
+  source_id: null # 设置为null，表示使用所有来源数据
+  scene_id: null # 设置为null，表示使用所有场景数据
+  labels_dir: null # 标签目录，默认为null
+
+model:
+  name: RePSSModelV2 # 模型名称
+  checkpoint: null # 加载检查点路径，默认为空
+  use_pretrained_extractor: true # 使用预训练特征提取器
+  
+  # Mamba模型配置参数
+  mamba:
+    # 基本结构参数
+    d_model: 256 # 模型隐藏层维度
+    n_layers: 4 # Mamba层数
+    d_state: 16 # 状态维度
+    expand: 2 # 扩展比例
+    dropout: 0.1 # Dropout比率
+    
+    # 时间步长参数
+    dt_min: 0.01 # 最小时间步长
+    dt_max: 0.2 # 最大时间步长
+    dt_init: 0.1 # 初始时间步长
+    
+    # 特征维度配置
+    feature_dims:
+      rgb: 128 # RGB特征维度
+      nir: 128 # NIR特征维度
+      activity: 16 # 活动检测器特征维度
+    
+    # 频域增强参数
+    sampling_rate: 30.0 # 采样频率，默认30Hz
+    hr_band: [0.7, 2.5] # 心率频带，默认[0.7, 2.5]Hz
+    br_band: [0.15, 0.4] # 呢吸率频带，默认[0.15, 0.4]Hz
+    use_frequency_enhanced: true # 是否使用频域增强
+    
+    # 内存优化参数
+    use_checkpointing: true # 是否使用梦想检查点以节省内存
+    use_mixed_precision: true # 是否使用混合精度
+    max_batch_size: 2 # 最大批次大小，减少内存使用
+    use_fast_path: false # 是否使用快速计算路径
+    
+    # 其他参数
+    verbose: false # 是否输出详细日志
+training:
+  # 基本训练参数
+  epochs: 15 # 训练轮数
+  batch_size: 4 # 批次大小
+  early_stopping: 10 # 早停轮数，如果验证集没有改善
+  validation_interval: 1 # 验证间隔轮数
+  seed: 42 # 随机种子
+  
+  # 优化器设置
+  optimizer: adam # 优化器类型：可选adam/adamw/sgd
+  learning_rate: 0.001 # 学习率
+  weight_decay: 0.0001 # 权重衰减
+  beta1: 0.9 # Adam/AdamW的beta1参数
+  beta2: 0.999 # Adam/AdamW的beta2参数
+  momentum: 0.9 # SGD的动量参数
+  
+  # 学习率调度器
+  scheduler: cosine # 学习率调度类型：可选cosine/step/plateau
+  # cosine调度器参数
+  cosine_warm_epochs: 2 # 预热轮数
+  cosine_min_lr: 0.00001 # 最小学习率
+  # step调度器参数
+  step_size: 5 # 每隔多少轮调整学习率
+  step_gamma: 0.1 # 学习率衰减因子
+  # plateau调度器参数
+  plateau_patience: 3 # 平台等待轮数
+  plateau_factor: 0.1 # 学习率衰减因子
+  plateau_threshold: 0.001 # 判定是否改善的阈值
+  
+  # 损失函数设置
+  loss: mse # 损失函数类型：可选mse/mae/weighted_mse/huber/range_aware_mse
+  loss_weights: # 各输出分支的损失权重
+    hr: 1.0 # 心率损失权重
+    br: 0.5 # 呢吸率损失权重
+  huber_delta: 1.0 # Huber损失函数的delta参数
+  high_hr_weight: 1.5 # 加权MSE中高心率样本的权重
+  hr_weight_threshold: 100.0 # 判定高心率的阈值
+  range_penalty_weight: 0.1 # 范围感知MSE中范围罚项的权重
+
+  # 批次采样策略
+  use_balanced_sampler: false # 是否使用平衡批次采样器
+  low_hr_range: [0, 70] # 低心率范围
+  medium_hr_range: [70, 90] # 中心率范围
+  high_hr_range: [90, 200] # 高心率范围
+  low_hr_ratio: 0.2 # 低心率样本比例
+  high_hr_ratio: 0.3 # 高心率样本比例
+  
+  # 内存优化
+  use_mixed_precision: true # 是否使用混合精度训练
+  empty_cache_freq: 10 # 每多少迭代清空一次GPU缓存
+  gradient_accumulation_steps: 1 # 梯度累积步数
+
+# 可视化配置
+visualization:
+  enabled: true # 是否启用可视化
+  log_interval: 50 # 每多少次迭代记录一次
+  save_plots: true # 是否保存图表
+  plot_types: # 要生成的图表类型
+    - loss_curve # 损失曲线
+    - hr_scatter # 心率散点图
+    - hr_bland_altman # Bland-Altman图
+    - confusion_matrix # 方差矩阵（用于活动分类）
+  
+  # 特征可视化钩子
+  feature_hooks:
+    enabled: true # 是否启用特征钩子
+    max_samples: 16 # 每个图最多显示的样本数
+    layers: # 要可视化的层
+      - rgb_conv # RGB卷积层
+      - nir_conv # NIR卷积层
+      - fusion_layer # 融合层
+      - attention # 注意力层
+  
+  # TensorBoard配置
+  tensorboard:
+    enabled: true # 是否启用TensorBoard
+    log_histograms: false # 是否记录参数直方图
+    log_images: true # 是否记录图像
+    log_graph: true # 是否记录计算图

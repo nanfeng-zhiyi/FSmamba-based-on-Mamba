@@ -1,0 +1,12 @@
+# RePSS测试配置 
+data: 
+  path: data\vlhr\processed 
+  sequence_length: 75 
+  batch_size: 8 
+  num_workers: 4 
+  use_nir: true 
+  use_vppg: false 
+model: 
+  name: RepSSModelV2 
+  checkpoint: outputs/vipl_hr_training/checkpoints/best_model.pth 
+  visualize: true 
