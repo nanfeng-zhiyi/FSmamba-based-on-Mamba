@@ -262,5 +262,5 @@ python training/train_multitask.py --config /path/to/config.yaml
 # 注意事项
 
 * 如果您在项目文件中看到活动检测不要疑惑，活动检测是之前迭代实现的版本实现过的二级活动检测分类网络（但是由于实践后发现网络表现效果不佳因此将其去掉）
-* 对于多任务来讲本项目在FSMambaEncoder输出字典中还包括其余生理指标的特征生成机制，本人将其中的心率预测分支摘除参加4rd_repss竞赛（*The 4th RePSS* – *Multimodal Fusion Learning for Remote Physiological Signal Sensing, IJCAI 2025, Montreal, Canada, August* *2025*），基于轻量化的与训练权重我取得了第六名的位次
+* 对于多任务来讲本项目在FSMambaEncoder输出字典中还包括其余生理指标的特征生成机制，本人将其中的心率预测分支提取参加4rd_repss竞赛（*The 4th RePSS* – *Multimodal Fusion Learning for Remote Physiological Signal Sensing, IJCAI 2025, Montreal, Canada, August* *2025*），基于轻量化的与训练权重我取得了第六名的位次，目前论文已被IJCAI录用
 * 项目预测的生理指标包含心率、呼吸率、血氧
